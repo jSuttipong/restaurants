@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Api\GoogleMapController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -17,3 +18,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/map/getsearchplace', [GoogleMapController::class, 'getSearchPlaceLocation']);
+Route::get('/map/getnearby', [GoogleMapController::class, 'getNearbyRestarants']);
+Route::get('/map/getphotoplace', [GoogleMapController::class, 'getPhotoPlace']);
+
