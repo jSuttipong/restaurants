@@ -9,7 +9,7 @@
             v-on:keyup.enter="findLocation"
         />
         <ButtonNav />
-        <div v-if="apiError">
+        <div v-if="isApiError">
             <WrongCard />
         </div>
         <div v-if="isLoading" class="row">
@@ -55,6 +55,7 @@ import WrongCard from "../Components/WrongCard.vue";
 import LoadmoreCard from "../Components/LoadmoreCard.vue";
 
 import axios from "axios";
+import { Variable } from "eslint-scope";
 export default {
     components: {
         SearchBar,
@@ -73,7 +74,7 @@ export default {
             nextPageToken: "",
             havePlace: false,
             currentPlace: "Bang sue",
-            apiError: false,
+            isApiError: false,
             currentlatAndLng: {
                 lat: "",
                 lng: "",
@@ -87,8 +88,9 @@ export default {
     },
     methods: {
         findLocation() {
+            // This function use for find location place and set data component.
             let vm = this;
-            this.isLoading = true;
+            this.isLoading = true; // Lazy load animate.
             this.placeBySearch = [];
             this.currentPlace = this.searchInput
                 ? this.searchInput
@@ -112,6 +114,7 @@ export default {
             });
         },
         async getSearchPlace(place) {
+            // Call api search place by use place name. Respone return array form.
             try {
                 let response = await axios.get(
                     this.apiUrl + "/api/map/getsearchplace",
@@ -124,11 +127,12 @@ export default {
                 return response.data;
             } catch (error) {
                 this.isLoading = false;
-                this.apiError = true;
+                this.isApiError = true;
                 console.log(error);
             }
         },
         async getNearby(lat, lng, pageToken) {
+            // call api nearby place use latiture and longtiture. Respone return json form.
             this.currentlatAndLng.lat = lat;
             this.currentlatAndLng.lng = lng;
             try {
@@ -170,13 +174,13 @@ export default {
                 return transfromData;
             } catch (error) {
                 this.isLoading = false;
-                this.apiError = true;
+                this.isApiError = true;
                 console.log(error);
             }
         },
         // No use this because it too slow.
         async getPhotoPlace(reference) {
-            // Get photo with google api base64.
+            // Get photo with google api base64. Respone return base64.
             try {
                 const response = await axios.get(
                     this.apiUrl + "/api/map/getphotoplace",
@@ -189,11 +193,12 @@ export default {
                 return response.data.photo_data;
             } catch (error) {
                 this.isLoading = false;
-                this.apiError = true;
+                this.isApiError = true;
                 console.log(error);
             }
         },
         async getNextPage(nextPageToken) {
+            // Call more place location by next_page_token. Respone return json form.
             try {
                 const response = await axios.get(
                     this.apiUrl + "/api/map/getnextpage",
@@ -230,21 +235,23 @@ export default {
                 return transfromData;
             } catch (error) {
                 this.isLoading = false;
-                this.apiError = true;
+                this.isApiError = true;
                 console.log(error);
             }
         },
         callNextPage() {
-            this.isLoadingNextPage = true;
+            // Process call next page data.
+            this.isLoadingNextPage = true; // Lazy load animate.
             this.getNextPage(this.nextPageToken)
                 .then((response) => {
+                    // Update data to placeBySearch.
                     for (let i = 0; i < response.length; i++) {
                         this.placeBySearch.push(response[i]);
                     }
-                    this.isLoadingNextPage = false;
+                    this.isLoadingNextPage = false; // Stop loading animate.
                 })
                 .catch((err) => {
-                    this.isLoadingNextPage = false;
+                    this.isLoadingNextPage = false; // Stop loading animate.
                     console.log(err);
                 });
         },
