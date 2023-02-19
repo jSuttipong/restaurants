@@ -12,15 +12,6 @@ class GoogleMapController extends Controller
 
     public function getSearchPlaceLocation(Request $request)
     {
-        // $location
-        // Transform input params data to variable.
-        // $location = '';
-        // if ($request->input('location')) {
-        //     $location = $request->input('location');
-        // }else{
-        //     $location = "bang sue";
-        // }
-        // $location = $request->input('location') ?? 'bang sue';
 
         // Find location latitude longitude with google map findplace.
         $location = $request->input('location');
@@ -32,11 +23,18 @@ class GoogleMapController extends Controller
         ]);
 
         // Transform response json data to variable
-        // $rawdata = json_decode($response, true);
+        $rawdata = json_decode($response, true);
         // $lat = $rawdata['candidates'][0]['geometry']['location']['lat'];
         // $lng = $rawdata['candidates'][0]['geometry']['location']['lng'];
-        // return [$lat,$lng];
-        return $response;
+        $lat = isset($rawdata['candidates']) && isset($rawdata['candidates'][0]) && isset($rawdata['candidates'][0]['geometry']['location']['lat'])
+        ? $rawdata['candidates'][0]['geometry']['location']['lat']
+        : " ";
+        $lng = isset($rawdata['candidates']) && isset($rawdata['candidates'][0]) && isset($rawdata['candidates'][0]['geometry']['location']['lng'])
+        ? $rawdata['candidates'][0]['geometry']['location']['lng']
+        : " ";
+        $formatToArray = array("lat" => $lat, "lng" => $lng);
+        $newData = json_encode($formatToArray);
+        return $newData;
     }
 
     public function getNearbyRestarants(Request $request)
@@ -44,31 +42,37 @@ class GoogleMapController extends Controller
         // $latandlng
         $lat = $request->input('lat');
         $lng = $request->input('lng');
+        
         $response = Http::get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', [
             'keyword' => 'restaurant',
-            'location' => $lat.' '.$lng,
-            'radius' => '30000',
+            'location' => $lat.','.$lng,
+            'radius' => '3000',
             'type' => 'restaurants',
+            'language' => 'en,th',
+            'pageToken' => '',
             'key' => env('GOOGLE_MAPS_API_KEY')
         ]);
-        // 'location' => $latandlng[0].' '.$latandlng[1],
-        // echo ('$latandlng =>'.$latandlng[0]);
-        // check input
-        // echo ("this getSearchPlaceLocation => ".$location);
-        // return response()->json($response->json());
+        
         return $response;
     }
-
+    
     public function getPhotoPlace(Request $request)
     {
-        // $reference
         $reference = $request->input('reference');
-        $response = Http::get('https://maps.googleapis.com/maps/api/place/photo/', [
-            'maxwidth' => 400,
-            'photo_reference' => '',
+        $key = env('GOOGLE_MAPS_API_KEY');
+        $url = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=300&photoreference={$reference}&key={$key}";
+        // Return response to base64
+        $contents = file_get_contents($url);
+        return response()->json(['photo_data' => base64_encode($contents)]);
+    }
+
+    public function getNextPage(Request $request)
+    {
+        $pageToken = $request->input('pagetoken');
+        $response = Http::get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', [
+            'pagetoken' => $pageToken,
             'key' => env('GOOGLE_MAPS_API_KEY')
         ]);
-
         return $response;
     }
 
